@@ -7,3 +7,12 @@ const options={foot:'right',direction:'side',goal:'balance',aspect:16/9};
 test('both feet have bounded evidence linked observations',()=>{for(const foot of ['right','left']){const result=evaluate(frames(foot==='right'?28:27),{...options,foot},1);assert.equal(result.issues.length,0);assert.equal(result.phases.length,4);assert.ok(result.advice.length>0&&result.advice.length<=3);for(const a of result.advice)assert.ok(result.phases.some(p=>p.time===a.time));assert.ok(Number.isFinite(result.metrics.tilt));}});
 test('occluded feet, dark video and multiple people suppress advice',()=>{for(const alter of [f=>{f.pose[28].visibility=.1;},f=>{f.light=10;},f=>{f.people=2;},f=>{f.sharpness=0;}]){const data=frames();data.forEach(alter);const result=evaluate(data,options,1);assert.ok(result.issues.length);assert.equal(result.advice.length,0);assert.equal(result.metrics,null);}});
 test('frontal footage suppresses directional pelvis advice',()=>{const result=evaluate(frames(),{...options,direction:'front'},1);assert.ok(!result.advice.some(a=>a.title.includes('骨盤')));});
+test('a usable action remains analyzable when most of a tutorial is explanation',()=>{
+  const data=frames();data.forEach((f,i)=>{if(i<20||i>34)f.pose=null;});
+  const result=evaluate(data,options,1);
+  assert.equal(result.issues.length,0);assert.ok(result.advice.length);assert.ok(result.phases.every(p=>p.time>=20/6&&p.time<=34/6));
+});
+test('isolated frames across camera cuts do not produce coaching',()=>{
+  const data=frames();data.forEach((f,i)=>{if(i%6!==0)f.pose=null;});
+  const result=evaluate(data,options,1);assert.ok(result.issues.length);assert.equal(result.advice.length,0);
+});
