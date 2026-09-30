@@ -1,0 +1,6 @@
+node_modules/
+dist/
+public/pose.worker.js
+*.log
+.venv/
+__pycache__/
